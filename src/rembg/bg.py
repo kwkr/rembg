@@ -1,4 +1,5 @@
 import io
+import os
 
 import functools
 import numpy as np
@@ -9,6 +10,11 @@ from pymatting.util.util import stack_images
 from scipy.ndimage.morphology import binary_erosion
 
 from .u2net import detect
+
+
+ALT_PATH = None
+if 'ALT_PATH' in os.environ:
+    ALT_PATH = os.environ['ALT_PATH']
 
 
 def alpha_matting_cutout(
@@ -66,10 +72,11 @@ def naive_cutout(img, mask):
 
 @functools.lru_cache(maxsize=None)
 def get_model(model_name):
+    global ALT_PATH
     if model_name == "u2netp":
-        return detect.load_model(model_name="u2netp")
+        return detect.load_model(model_name="u2netp", alt_path=ALT_PATH)
     else:
-        return detect.load_model(model_name="u2net")
+        return detect.load_model(model_name="u2net", alt_path=ALT_PATH)
 
 
 def remove(

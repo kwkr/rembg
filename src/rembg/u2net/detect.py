@@ -46,34 +46,45 @@ def download_file_from_google_drive(id, fname, destination):
             bar.update(size)
 
 
-def load_model(model_name: str = "u2net"):
-    os.makedirs(os.path.expanduser(os.path.join("~", ".u2net")), exist_ok=True)
+def load_model(model_name: str = "u2net", alt_path=None):
+    if alt_path is None:
+        os.makedirs(os.path.expanduser(os.path.join("~", ".u2net")), exist_ok=True)
 
-    if model_name == "u2netp":
-        net = u2net.U2NETP(3, 1)
-        path = os.path.expanduser(os.path.join("~", ".u2net", model_name))
-        download_file_from_google_drive(
-            "1rbSTGKAE-MTxBYHd-51l2hMOQPT_7EPy", "u2netp.pth", path,
-        )
-    elif model_name == "u2net":
-        net = u2net.U2NET(3, 1)
-        path = os.path.expanduser(os.path.join("~", ".u2net", model_name))
-        download_file_from_google_drive(
-            "1ao1ovG1Qtx4b7EoskHXmi2E9rp5CHLcZ", "u2net.pth", path,
-        )
-    else:
-        print("Choose between u2net or u2netp", file=sys.stderr)
-
-    try:
-        if torch.cuda.is_available():
-            net.load_state_dict(torch.load(path))
-            net.to(torch.device("cuda"))
+        if model_name == "u2netp":
+            net = u2net.U2NETP(3, 1)
+            path = os.path.expanduser(os.path.join("~", ".u2net", model_name))
+            download_file_from_google_drive(
+                "1rbSTGKAE-MTxBYHd-51l2hMOQPT_7EPy", "u2netp.pth", path,
+            )
+        elif model_name == "u2net":
+            net = u2net.U2NET(3, 1)
+            path = os.path.expanduser(os.path.join("~", ".u2net", model_name))
+            download_file_from_google_drive(
+                "1ao1ovG1Qtx4b7EoskHXmi2E9rp5CHLcZ", "u2net.pth", path,
+            )
         else:
-            net.load_state_dict(torch.load(path, map_location="cpu",))
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            errno.ENOENT, os.strerror(errno.ENOENT), model_name + ".pth"
-        )
+            print("Choose between u2net or u2netp", file=sys.stderr)
+    
+        try:
+            if torch.cuda.is_available():
+                net.load_state_dict(torch.load(path))
+                net.to(torch.device("cuda"))
+            else:
+                net.load_state_dict(torch.load(path, map_location="cpu",))
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                errno.ENOENT, os.strerror(errno.ENOENT), model_name + ".pth"
+            )
+    else:
+        try:
+            net = u2net.U2NET(3, 1)
+            net.load_state_dict(torch.load(alt_path, map_location="cpu",))
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                errno.ENOENT, os.strerror(errno.ENOENT), model_name + ".pth"
+            )
+
+    
 
     net.eval()
 
